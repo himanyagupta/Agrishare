@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper text-field-950 antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-field-950;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-turmeric-500;
+  }
+}
+
+@layer components {
+  /* Shared "mandi ticket" card shell used across resource + demand cards */
+  .kl-card {
+    @apply bg-white rounded-2xl border border-field-100 shadow-card transition-shadow hover:shadow-lg;
+  }
+
+  .kl-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-field-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-field-800 focus-visible:outline-2 focus-visible:outline-turmeric-500 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .kl-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-field-300 bg-white px-5 py-2.5 text-sm font-semibold text-field-800 transition-colors hover:bg-field-50 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .kl-btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-turmeric-400 px-5 py-2.5 text-sm font-semibold text-soil-900 transition-colors hover:bg-turmeric-300 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .kl-input {
+    @apply w-full rounded-lg border border-field-200 bg-white px-3.5 py-2.5 text-sm text-field-900 placeholder:text-field-400 focus:border-field-500 focus:outline-none focus:ring-2 focus:ring-field-200;
+  }
+
+  .kl-label {
+    @apply block text-sm font-medium text-field-800 mb-1.5;
+  }
+
+  .kl-section-eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-field-600;
+  }
+}
