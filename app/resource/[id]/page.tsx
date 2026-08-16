@@ -101,7 +101,7 @@ export default function ResourceDetailsPage({ params }: { params: { id: string }
             </span>
             <p className="font-medium text-field-700">Map view coming soon</p>
             <p className="max-w-sm text-sm">
-              An interactive Leaflet/OpenStreetMap view will show this resource's exact location
+              An interactive Leaflet/OpenStreetMap view will show this resource&apos;s exact location
               once maps are integrated in the next milestone.
             </p>
           </div>

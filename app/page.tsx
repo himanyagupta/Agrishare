@@ -182,7 +182,7 @@ export default function LandingPage() {
       {/* Categories */}
       <section className="bg-field-50/60 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <span className="kl-section-eyebrow text-field-700">What's on AgriShare</span>
+          <span className="kl-section-eyebrow text-field-700">What&apos;s on AgriShare</span>
           <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
             Machinery and residue, side by side
           </h2>
@@ -229,7 +229,7 @@ export default function LandingPage() {
             <div>
               <span className="kl-section-eyebrow text-turmeric-300">Community Demand</span>
               <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
-                See what your community needs before it's posted twice
+                See what your community needs before it&apos;s posted twice
               </h2>
               <p className="mt-4 text-field-200">
                 Browse open requests from nearby farmers, cooperatives and small businesses —
