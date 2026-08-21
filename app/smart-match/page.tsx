@@ -57,7 +57,7 @@ function SmartMatchContent() {
         {/* Controls */}
         <div className="kl-card h-fit space-y-5 p-5 lg:sticky lg:top-24">
           <div>
-            <label className="kl-label">I'm looking for</label>
+            <label className="kl-label"> I&apos;m looking for</label>
             <div className="grid grid-cols-2 gap-2">
               {(["machinery", "residue"] as ResourceCategory[]).map((cat) => (
                 <button
