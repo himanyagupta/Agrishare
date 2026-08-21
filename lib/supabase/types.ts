@@ -37,6 +37,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Relationships: [];
       };
       resources: {
         Row: {
@@ -78,6 +79,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["resources"]["Insert"]>;
+        Relationships: [];
       };
       requests: {
         Row: {
@@ -107,6 +109,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["requests"]["Insert"]>;
+        Relationships: [];
       };
       bookings: {
         Row: {
@@ -132,6 +135,7 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["bookings"]["Insert"]>;
+        Relationships: [];
       };
       demand_posts: {
         Row: {
@@ -163,7 +167,19 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["demand_posts"]["Insert"]>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: {
+      user_role: UserRole;
+      resource_category: ResourceCategoryDB;
+      resource_status: ResourceStatusDB;
+      request_status: RequestStatusDB;
+      booking_status: BookingStatusDB;
+      demand_status: DemandStatusDB;
+    };
+    CompositeTypes: Record<string, never>;
   };
 }
