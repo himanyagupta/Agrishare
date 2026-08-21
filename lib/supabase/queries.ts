@@ -1,7 +1,11 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "./types";
 
-type Client = SupabaseClient<Database>;
+// Deliberately untyped against Database — see the note in lib/supabase/client.ts.
+// The precise Row/Insert/Update shapes from Database are still used directly
+// below as parameter/return types, so callers of these functions get full
+// type safety; only the raw query-builder calls inside are loosely typed.
+type Client = SupabaseClient;
 
 // ---------------------------------------------------------------------------
 // Resources
