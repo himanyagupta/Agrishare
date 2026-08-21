@@ -1,15 +1,33 @@
 import Link from "next/link";
-import { resources, dashboardStats, recentActivity, CURRENT_USER, demandPosts } from "@/lib/mockData";
-import { formatINR } from "@/lib/utils";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getMyResources, getMyRequests, getProfile } from "@/lib/supabase/queries";
+import { dbResourceToUI } from "@/lib/supabase/adapters";
 import DashboardStat from "@/components/DashboardStat";
 import ResourceCard from "@/components/ResourceCard";
-import AvailabilityBadge from "@/components/AvailabilityBadge";
 
-export default function DashboardPage() {
-  // In this prototype, "my resources" is a fixed slice of the mock data.
-  // Once Supabase auth is wired up, this will filter by the logged-in owner id.
-  const myResources = resources.slice(0, 3);
-  const myOpenDemand = demandPosts.slice(4, 6);
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?next=/dashboard");
+  }
+
+  const [{ data: profile }, { data: resourceRows }, { data: requestRows }] = await Promise.all([
+    getProfile(supabase, user.id),
+    getMyResources(supabase, user.id),
+    getMyRequests(supabase, user.id),
+  ]);
+
+  const myResources = (resourceRows ?? []).map((row) =>
+    dbResourceToUI(row, { fromLat: profile?.latitude, fromLng: profile?.longitude })
+  );
+  const activeCount = myResources.filter((r) => r.availability.status === "available").length;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -17,11 +35,9 @@ export default function DashboardPage() {
         <div>
           <span className="kl-section-eyebrow text-field-700">Welcome back</span>
           <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
-            {CURRENT_USER.name.split(" ")[0]}&apos;s Dashboard
+            {(profile?.name ?? "Your").split(" ")[0]}&apos;s Dashboard
           </h1>
-          <p className="mt-1 text-field-600">
-            {CURRENT_USER.village}, {CURRENT_USER.district}, {CURRENT_USER.state}
-          </p>
+          {profile?.location && <p className="mt-1 text-field-600">{profile.location}</p>}
         </div>
         <div className="flex gap-3">
           <Link href="/list-resource" className="kl-btn-primary">
@@ -37,30 +53,28 @@ export default function DashboardPage() {
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardStat
           label="Active Listings"
-          value={String(dashboardStats.myActiveListings)}
+          value={String(activeCount)}
           icon="📦"
-          trend="2 machinery · 1 residue"
+          trend={`${myResources.length} total listed`}
           accent="field"
         />
         <DashboardStat
-          label="Open Requests"
-          value={String(dashboardStats.myOpenRequests)}
-          icon="📋"
-          trend="Awaiting responses"
+          label="Machinery Listed"
+          value={String(myResources.filter((r) => r.category === "machinery").length)}
+          icon="🚜"
+          accent="field"
+        />
+        <DashboardStat
+          label="Residue Listed"
+          value={String(myResources.filter((r) => r.category === "residue").length)}
+          icon="🌾"
           accent="turmeric"
         />
         <DashboardStat
-          label="Matches Found"
-          value={String(dashboardStats.matchesFound)}
-          icon="🎯"
-          trend="Across all listings"
-          accent="field"
-        />
-        <DashboardStat
-          label="Estimated Savings"
-          value={formatINR(dashboardStats.estimatedSavings)}
-          icon="💰"
-          trend="vs. market hiring rates"
+          label="Open Requests"
+          value={String((requestRows ?? []).length)}
+          icon="📋"
+          trend="Personal requests"
           accent="soil"
         />
       </div>
@@ -74,55 +88,55 @@ export default function DashboardPage() {
               Add another →
             </Link>
           </div>
-          <div className="mt-4 grid gap-5 sm:grid-cols-2">
-            {myResources.map((resource) => (
-              <ResourceCard key={resource.id} resource={resource} />
-            ))}
-          </div>
 
-          <div className="mt-10">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-semibold text-field-900">My Requests</h2>
-              <Link href="/community-demand" className="text-sm font-semibold text-field-700 hover:underline">
-                Post a new request →
+          {myResources.length === 0 ? (
+            <div className="kl-card mt-4 flex flex-col items-center gap-2 p-10 text-center">
+              <span className="text-2xl">📦</span>
+              <p className="font-medium text-field-800">You haven&apos;t listed anything yet</p>
+              <p className="max-w-sm text-sm text-field-500">
+                List idle machinery or surplus crop residue so nearby farmers can find it.
+              </p>
+              <Link href="/list-resource" className="kl-btn-primary mt-2">
+                List a Resource
               </Link>
             </div>
-            <div className="mt-4 space-y-3">
-              {myOpenDemand.map((d) => (
-                <div key={d.id} className="kl-card flex items-center justify-between gap-4 p-4">
-                  <div>
-                    <p className="font-medium text-field-900">{d.title}</p>
-                    <p className="text-sm text-field-500">
-                      {d.quantityNeeded} · {d.neededBy}
-                    </p>
-                  </div>
-                  <AvailabilityBadge
-                    availability={{
-                      status: d.urgency === "high" ? "upcoming" : "available",
-                      detail: `${d.respondersCount} responses`,
-                    }}
-                  />
-                </div>
+          ) : (
+            <div className="mt-4 grid gap-5 sm:grid-cols-2">
+              {myResources.map((resource) => (
+                <ResourceCard key={resource.id} resource={resource} />
               ))}
             </div>
-          </div>
+          )}
         </section>
 
-        {/* Recent activity */}
+        {/* My requests */}
         <section>
-          <h2 className="font-display text-xl font-semibold text-field-900">Recent Activity</h2>
-          <div className="kl-card mt-4 divide-y divide-field-100">
-            {recentActivity.map((item) => (
-              <div key={item.id} className="flex items-start gap-3 p-4">
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-field-50 text-base">
-                  {item.icon}
-                </span>
-                <div>
-                  <p className="text-sm text-field-800">{item.message}</p>
-                  <p className="mt-0.5 text-xs text-field-500">{item.time}</p>
-                </div>
+          <h2 className="font-display text-xl font-semibold text-field-900">My Requests</h2>
+          <div className="kl-card mt-4 p-5">
+            {(requestRows ?? []).length === 0 ? (
+              <div className="text-center">
+                <p className="text-sm text-field-600">
+                  You haven&apos;t posted a personal request yet.
+                </p>
+                <Link
+                  href="/community-demand"
+                  className="mt-2 inline-block text-sm font-semibold text-field-700 hover:underline"
+                >
+                  Post to Community Demand instead →
+                </Link>
               </div>
-            ))}
+            ) : (
+              <ul className="space-y-3">
+                {(requestRows ?? []).map((r) => (
+                  <li key={r.id} className="border-b border-field-100 pb-3 last:border-0 last:pb-0">
+                    <p className="font-medium text-field-900">{r.resource_type}</p>
+                    <p className="text-xs text-field-500">
+                      {r.quantity ?? "—"} · {r.status}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="kl-card mt-6 bg-field-50/60 p-5">
@@ -130,8 +144,8 @@ export default function DashboardPage() {
               Next milestone
             </h3>
             <p className="mt-1.5 text-sm text-field-600">
-              This dashboard currently reflects sample data. Once Supabase auth and database are
-              connected, it will show your real listings, requests and match history.
+              This dashboard now reflects your real AgriShare data. Matching, bookings and
+              messaging are planned for upcoming milestones.
             </p>
           </div>
         </section>

@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks/useUser";
+import { createClient } from "@/lib/supabase/client";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -12,6 +14,54 @@ const LINKS = [
   { href: "/smart-match", label: "Smart Match" },
   { href: "/community-demand", label: "Community Demand" },
 ];
+
+function AuthArea({ onNavigate }: { onNavigate?: () => void }) {
+  const { user, profile, loading } = useUser();
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    onNavigate?.();
+    router.push("/");
+    router.refresh();
+  }
+
+  if (loading) {
+    return <div className="h-9 w-24 animate-pulse rounded-full bg-field-100" />;
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center gap-2">
+        <Link href="/login" onClick={onNavigate} className="kl-btn-secondary">
+          Log In
+        </Link>
+        <Link href="/signup" onClick={onNavigate} className="kl-btn-accent">
+          Sign Up
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Link
+        href="/profile"
+        onClick={onNavigate}
+        className="flex items-center gap-2 rounded-full border border-field-200 py-1 pl-1 pr-3 text-sm font-medium text-field-800 hover:bg-field-50"
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-field-100 text-xs font-semibold text-field-700">
+          {(profile?.name ?? user.email ?? "?").charAt(0).toUpperCase()}
+        </span>
+        {profile?.name ?? "My Profile"}
+      </Link>
+      <button type="button" onClick={handleLogout} className="kl-btn-secondary">
+        Log Out
+      </button>
+    </div>
+  );
+}
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -50,10 +100,11 @@ export default function Navbar() {
           })}
         </div>
 
-        <div className="hidden lg:block">
+        <div className="hidden items-center gap-3 lg:flex">
           <Link href="/list-resource" className="kl-btn-accent">
             + List a Resource
           </Link>
+          <AuthArea />
         </div>
 
         <button
@@ -101,6 +152,9 @@ export default function Navbar() {
             >
               + List a Resource
             </Link>
+            <div className="mt-2">
+              <AuthArea onNavigate={() => setOpen(false)} />
+            </div>
           </div>
         </div>
       )}

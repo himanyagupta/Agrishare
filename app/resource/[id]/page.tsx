@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { resources } from "@/lib/mockData";
+import { createClient } from "@/lib/supabase/server";
+import { getResourceById, getResources } from "@/lib/supabase/queries";
+import { dbResourceToUI } from "@/lib/supabase/adapters";
 import { formatINR, timeAgo } from "@/lib/utils";
 import ResourceTypeBadge from "@/components/ResourceTypeBadge";
 import LocationBadge from "@/components/LocationBadge";
@@ -8,20 +10,40 @@ import AvailabilityBadge from "@/components/AvailabilityBadge";
 import ResourceCard from "@/components/ResourceCard";
 import RequestResourceButton from "@/components/RequestResourceButton";
 
-export function generateStaticParams() {
-  return resources.map((r) => ({ id: r.id }));
-}
+export const dynamic = "force-dynamic";
 
-export default function ResourceDetailsPage({ params }: { params: { id: string } }) {
-  const resource = resources.find((r) => r.id === params.id);
-  if (!resource) notFound();
+export default async function ResourceDetailsPage({ params }: { params: { id: string } }) {
+  const supabase = createClient();
 
-  const similar = resources
-    .filter((r) => r.id !== resource.id && r.type === resource.type)
-    .slice(0, 3);
-  const fallbackSimilar = similar.length
-    ? similar
-    : resources.filter((r) => r.id !== resource.id && r.category === resource.category).slice(0, 3);
+  const [{ data: user }, { data: row, error }] = await Promise.all([
+    supabase.auth.getUser().then((r) => ({ data: r.data.user })),
+    getResourceById(supabase, params.id),
+  ]);
+
+  if (error || !row) notFound();
+
+  const { data: ownerProfile } = await supabase
+    .from("users")
+    .select("name, phone, location, latitude, longitude")
+    .eq("id", row.owner_id)
+    .maybeSingle();
+
+  const resource = dbResourceToUI(row, {
+    ownerName: ownerProfile?.name,
+    ownerPhone: ownerProfile?.phone,
+    fromLat: ownerProfile?.latitude,
+    fromLng: ownerProfile?.longitude,
+  });
+
+  const isOwner = user?.id === row.owner_id;
+
+  const { data: allRows } = await getResources(supabase);
+  const others = (allRows ?? []).filter((r) => r.id !== row.id);
+  const sameType = others.filter((r) => r.type === row.type).slice(0, 3);
+  const similarRows = sameType.length
+    ? sameType
+    : others.filter((r) => r.category === row.category).slice(0, 3);
+  const similar = similarRows.map((r) => dbResourceToUI(r));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -39,26 +61,28 @@ export default function ResourceDetailsPage({ params }: { params: { id: string }
               <span aria-hidden>{resource.icon}</span>
             </div>
             <div className="p-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <ResourceTypeBadge category={resource.category} />
-                <AvailabilityBadge availability={resource.availability} />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <ResourceTypeBadge category={resource.category} />
+                  <AvailabilityBadge availability={resource.availability} />
+                </div>
+                {isOwner && (
+                  <Link href={`/list-resource/${row.id}/edit`} className="kl-btn-secondary !px-4 !py-1.5 text-xs">
+                    Edit Listing
+                  </Link>
+                )}
               </div>
 
               <h1 className="mt-4 text-3xl font-semibold">{resource.title}</h1>
               <p className="mt-1 text-field-500">{resource.type}</p>
 
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-field-600">
-                <LocationBadge location={resource.location} />
+                <LocationBadge location={resource.location} showDistance={resource.location.distanceKm > 0} />
                 <span>·</span>
                 <span>{timeAgo(resource.listedDaysAgo)}</span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <span aria-hidden>⭐</span>
-                  {resource.rating.toFixed(1)} ({resource.ratingCount} reviews)
-                </span>
               </div>
 
-              <p className="mt-6 text-field-700">{resource.description}</p>
+              <p className="mt-6 text-field-700">{resource.description || "No description provided."}</p>
 
               <dl className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-field-50/70 p-4 sm:grid-cols-3">
                 {resource.quantity && (
@@ -73,24 +97,7 @@ export default function ResourceDetailsPage({ params }: { params: { id: string }
                     <dd className="mt-0.5 font-medium text-field-800">{resource.condition}</dd>
                   </div>
                 )}
-                <div>
-                  <dt className="text-xs text-field-500">Owner farming since</dt>
-                  <dd className="mt-0.5 font-medium text-field-800">
-                    {resource.ownerVillageYears} years
-                  </dd>
-                </div>
               </dl>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {resource.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-field-100 px-3 py-1 text-xs font-medium text-field-700"
-                  >
-                    #{tag.replace(/\s+/g, "-")}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
 
@@ -101,7 +108,7 @@ export default function ResourceDetailsPage({ params }: { params: { id: string }
             </span>
             <p className="font-medium text-field-700">Map view coming soon</p>
             <p className="max-w-sm text-sm">
-              An interactive Leaflet/OpenStreetMap view will show this resource&apos;s exact location
+              An interactive Leaflet/OpenStreetMap view will show this resource's exact location
               once maps are integrated in the next milestone.
             </p>
           </div>
@@ -119,14 +126,18 @@ export default function ResourceDetailsPage({ params }: { params: { id: string }
             <p className="mt-1 text-sm text-field-500">{resource.availability.detail}</p>
 
             <div className="mt-5">
-              <RequestResourceButton ownerName={resource.ownerName} />
+              {isOwner ? (
+                <p className="rounded-lg bg-field-50 p-3 text-center text-sm text-field-600">
+                  This is your own listing.
+                </p>
+              ) : (
+                <RequestResourceButton ownerName={resource.ownerName} />
+              )}
             </div>
           </div>
 
           <div className="kl-card p-6">
-            <h3 className="font-display text-base font-semibold text-field-900">
-              Listed by
-            </h3>
+            <h3 className="font-display text-base font-semibold text-field-900">Listed by</h3>
             <div className="mt-3 flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-field-100 text-lg font-semibold text-field-700">
                 {resource.ownerName.charAt(0)}
@@ -134,7 +145,8 @@ export default function ResourceDetailsPage({ params }: { params: { id: string }
               <div>
                 <p className="font-medium text-field-900">{resource.ownerName}</p>
                 <p className="text-xs text-field-500">
-                  {resource.location.village}, {resource.location.district}
+                  {resource.location.village}
+                  {resource.location.district ? `, ${resource.location.district}` : ""}
                 </p>
               </div>
             </div>
@@ -161,13 +173,13 @@ export default function ResourceDetailsPage({ params }: { params: { id: string }
         </aside>
       </div>
 
-      {fallbackSimilar.length > 0 && (
+      {similar.length > 0 && (
         <section className="mt-14">
           <h2 className="font-display text-xl font-semibold text-field-900">
             Similar resources nearby
           </h2>
           <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {fallbackSimilar.map((r) => (
+            {similar.map((r) => (
               <ResourceCard key={r.id} resource={r} />
             ))}
           </div>

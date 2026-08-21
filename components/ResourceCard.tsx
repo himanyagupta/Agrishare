@@ -39,10 +39,12 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
               {resource.priceUnit}
             </span>
           </p>
-          <p className="mt-0.5 flex items-center gap-1 text-xs text-field-500">
-            <span aria-hidden>⭐</span>
-            {resource.rating.toFixed(1)} ({resource.ratingCount})
-          </p>
+          {resource.ratingCount > 0 && (
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-field-500">
+              <span aria-hidden>⭐</span>
+              {resource.rating.toFixed(1)} ({resource.ratingCount})
+            </p>
+          )}
         </div>
         <AvailabilityBadge availability={resource.availability} />
       </div>

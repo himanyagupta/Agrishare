@@ -48,12 +48,16 @@ function SmartMatchContent() {
         transparent, rule-based score — distance, availability, cost fit and demand match — so
         you can see exactly why each result is recommended.
       </p>
+      <p className="mt-2 max-w-2xl text-xs text-field-500">
+        This preview still runs on sample listings, not your live AgriShare data — real-data
+        matching is planned for the next milestone.
+      </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[340px_1fr]">
         {/* Controls */}
         <div className="kl-card h-fit space-y-5 p-5 lg:sticky lg:top-24">
           <div>
-            <label className="kl-label">I&apos;m looking for</label>
+            <label className="kl-label">I'm looking for</label>
             <div className="grid grid-cols-2 gap-2">
               {(["machinery", "residue"] as ResourceCategory[]).map((cat) => (
                 <button
@@ -168,12 +172,12 @@ function SmartMatchContent() {
                       <ResourceTypeBadge category={resource.category} />
                       <AvailabilityBadge availability={resource.availability} />
                     </div>
-                    <Link
-                      href={`/resource/${resource.id}`}
-                      className="mt-2 block font-display text-lg font-semibold text-field-900 hover:text-field-700"
-                    >
+                    <p className="mt-2 font-display text-lg font-semibold text-field-900">
                       {resource.title}
-                    </Link>
+                      <span className="ml-2 align-middle text-xs font-sans font-normal text-field-400">
+                        (sample listing)
+                      </span>
+                    </p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-field-600">
                       <LocationBadge location={resource.location} />
                       <span>·</span>

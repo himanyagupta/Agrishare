@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { resources, demandPosts } from "@/lib/mockData";
-import { formatINR, formatDistance } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/server";
+import { getResources, getDemandPosts } from "@/lib/supabase/queries";
+import { dbResourceToUI, dbDemandToUI, parseLocation } from "@/lib/supabase/adapters";
 import ResourceCard from "@/components/ResourceCard";
 
 const HOW_IT_WORKS = [
@@ -25,12 +26,12 @@ const HOW_IT_WORKS = [
 ];
 
 const CATEGORIES = [
-  { label: "Tractors", icon: "🚜", count: "120+ listed" },
-  { label: "Harvesters", icon: "🌾", count: "34 listed" },
-  { label: "Rotavators & Tillers", icon: "⚙️", count: "58 listed" },
-  { label: "Wheat & Paddy Straw", icon: "🌱", count: "210+ quintals" },
-  { label: "Cotton & Maize Residue", icon: "🌽", count: "140+ quintals" },
-  { label: "Sprayers & Drills", icon: "💦", count: "41 listed" },
+  { label: "Tractors", icon: "🚜" },
+  { label: "Harvesters", icon: "🌾" },
+  { label: "Rotavators & Tillers", icon: "⚙️" },
+  { label: "Wheat & Paddy Straw", icon: "🌱" },
+  { label: "Cotton & Maize Residue", icon: "🌽" },
+  { label: "Sprayers & Drills", icon: "💦" },
 ];
 
 const TESTIMONIALS = [
@@ -54,9 +55,28 @@ const TESTIMONIALS = [
   },
 ];
 
-export default function LandingPage() {
-  const featured = resources.filter((r) => r.availability.status === "available").slice(0, 3);
-  const urgentDemand = demandPosts.find((d) => d.urgency === "high");
+export const dynamic = "force-dynamic";
+
+export default async function LandingPage() {
+  const supabase = createClient();
+
+  const [{ data: resourceRows }, { data: demandRows }] = await Promise.all([
+    getResources(supabase),
+    getDemandPosts(supabase),
+  ]);
+
+  const allResources = resourceRows ?? [];
+  const allDemand = demandRows ?? [];
+
+  const featured = allResources
+    .filter((r) => r.status === "available")
+    .slice(0, 3)
+    .map((r) => dbResourceToUI(r));
+
+  const demandTeaser = allDemand.slice(0, 2).map((d) => dbDemandToUI(d));
+
+  const villageCount = new Set(allResources.map((r) => parseLocation(r.location).village)).size;
+  const residueCount = allResources.filter((r) => r.category === "crop_residue").length;
 
   return (
     <div>
@@ -91,23 +111,29 @@ export default function LandingPage() {
             <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-field-200 pt-6">
               <div>
                 <dt className="text-xs text-field-500">Active listings</dt>
-                <dd className="font-display text-2xl font-semibold text-field-800">480+</dd>
+                <dd className="font-display text-2xl font-semibold text-field-800">
+                  {allResources.length}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-field-500">Villages covered</dt>
-                <dd className="font-display text-2xl font-semibold text-field-800">62</dd>
+                <dd className="font-display text-2xl font-semibold text-field-800">
+                  {villageCount}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs text-field-500">Residue diverted</dt>
-                <dd className="font-display text-2xl font-semibold text-field-800">2,100 qtl</dd>
+                <dt className="text-xs text-field-500">Residue listings</dt>
+                <dd className="font-display text-2xl font-semibold text-field-800">
+                  {residueCount}
+                </dd>
               </div>
             </dl>
           </div>
 
-          {/* Signature element: a live "match corridor" card showing supply -> demand */}
+          {/* Signature element: a "match corridor" illustration of how Smart Match works */}
           <div className="relative">
             <div className="kl-card relative overflow-hidden p-6">
-              <p className="kl-section-eyebrow text-field-500">Live match preview</p>
+              <p className="kl-section-eyebrow text-field-500">How a match looks</p>
               <div className="mt-4 flex items-center justify-between gap-2">
                 <div className="flex-1 rounded-xl bg-field-50 p-3">
                   <p className="text-xs text-field-500">Supply</p>
@@ -132,22 +158,18 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {urgentDemand && (
-                <div className="mt-5 flex items-center justify-between rounded-xl border border-field-100 p-3">
-                  <div>
-                    <p className="text-xs text-field-500">Estimated match score</p>
-                    <p className="font-display text-lg font-semibold text-field-700">87 / 100</p>
-                  </div>
-                  <Link href="/smart-match" className="kl-btn-accent !px-4 !py-2 text-xs">
-                    See how matching works
-                  </Link>
+              <div className="mt-5 flex items-center justify-between rounded-xl border border-field-100 p-3">
+                <div>
+                  <p className="text-xs text-field-500">Estimated match score</p>
+                  <p className="font-display text-lg font-semibold text-field-700">87 / 100</p>
                 </div>
-              )}
-            </div>
-
-            <div className="absolute -bottom-6 -left-6 hidden rounded-2xl bg-field-800 px-4 py-3 text-white shadow-card sm:block">
-              <p className="text-xs text-field-200">Straw diverted this week</p>
-              <p className="font-display text-lg font-semibold">140 quintals</p>
+                <Link href="/smart-match" className="kl-btn-accent !px-4 !py-2 text-xs">
+                  Try Smart Match
+                </Link>
+              </div>
+              <p className="mt-3 text-[11px] text-field-400">
+                Illustrative example — Smart Match runs on sample data for now.
+              </p>
             </div>
           </div>
         </div>
@@ -197,7 +219,6 @@ export default function LandingPage() {
                   {cat.icon}
                 </span>
                 <span className="text-sm font-semibold text-field-800">{cat.label}</span>
-                <span className="text-xs text-field-500">{cat.count}</span>
               </Link>
             ))}
           </div>
@@ -208,52 +229,71 @@ export default function LandingPage() {
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <span className="kl-section-eyebrow text-field-700">Near Kishangarh, Ajmer</span>
+            <span className="kl-section-eyebrow text-field-700">On AgriShare now</span>
             <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Available right now</h2>
           </div>
           <Link href="/find-resources" className="kl-btn-secondary">
             Browse all resources
           </Link>
         </div>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((resource) => (
-            <ResourceCard key={resource.id} resource={resource} />
-          ))}
-        </div>
+
+        {featured.length === 0 ? (
+          <div className="kl-card mt-10 flex flex-col items-center gap-2 p-12 text-center">
+            <span className="text-3xl">🌱</span>
+            <p className="font-display text-lg font-semibold text-field-900">
+              No listings yet — be the first
+            </p>
+            <p className="max-w-sm text-sm text-field-500">
+              Sign up and list your machinery or crop residue to get AgriShare started in your
+              area.
+            </p>
+            <Link href="/signup" className="kl-btn-primary mt-3">
+              Create an Account
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {featured.map((resource) => (
+              <ResourceCard key={resource.id} resource={resource} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Community demand teaser */}
-      <section className="bg-field-900 py-16 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-            <div>
-              <span className="kl-section-eyebrow text-turmeric-300">Community Demand</span>
-              <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
-                See what your community needs before it&apos;s posted twice
-              </h2>
-              <p className="mt-4 text-field-200">
-                Browse open requests from nearby farmers, cooperatives and small businesses —
-                for machinery on tight harvest windows, or bulk residue for fodder and biomass.
-              </p>
-              <Link href="/community-demand" className="kl-btn-accent mt-6 inline-flex">
-                View Community Demand
-              </Link>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {demandPosts.slice(0, 2).map((d) => (
-                <div key={d.id} className="rounded-2xl bg-field-800 p-5">
-                  <p className="text-xs text-turmeric-300">{d.type}</p>
-                  <p className="mt-1 font-display text-lg font-semibold">{d.title}</p>
-                  <p className="mt-2 text-sm text-field-300">
-                    {d.quantityNeeded} · {formatDistance(d.location.distanceKm)}
-                  </p>
-                  <p className="mt-1 text-sm text-field-300">Budget: {d.budget}</p>
-                </div>
-              ))}
+      {demandTeaser.length > 0 && (
+        <section className="bg-field-900 py-16 text-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+              <div>
+                <span className="kl-section-eyebrow text-turmeric-300">Community Demand</span>
+                <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
+                  See what your community needs before it&apos;s posted twice
+                </h2>
+                <p className="mt-4 text-field-200">
+                  Browse open requests from nearby farmers, cooperatives and small businesses —
+                  for machinery on tight harvest windows, or bulk residue for fodder and biomass.
+                </p>
+                <Link href="/community-demand" className="kl-btn-accent mt-6 inline-flex">
+                  View Community Demand
+                </Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {demandTeaser.map((d) => (
+                  <div key={d.id} className="rounded-2xl bg-field-800 p-5">
+                    <p className="text-xs text-turmeric-300">{d.type}</p>
+                    <p className="mt-1 font-display text-lg font-semibold">{d.title}</p>
+                    <p className="mt-2 text-sm text-field-300">
+                      {d.quantityNeeded} · {d.location.district || d.location.village}
+                    </p>
+                    <p className="mt-1 text-sm text-field-300">Budget: {d.budget}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Testimonials */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -270,6 +310,9 @@ export default function LandingPage() {
             </figure>
           ))}
         </div>
+        <p className="mt-4 text-xs text-field-400">
+          Illustrative farmer stories for this prototype demo.
+        </p>
       </section>
 
       {/* CTA band */}

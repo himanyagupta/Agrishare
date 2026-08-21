@@ -33,7 +33,7 @@ export default function DemandCard({ demand }: { demand: DemandPost }) {
         {demand.type} · requested by {demand.requestedBy}
       </p>
 
-      <p className="mt-2 text-sm text-field-600">{demand.notes}</p>
+      {demand.notes && <p className="mt-2 text-sm text-field-600">{demand.notes}</p>}
 
       <dl className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-field-50/70 p-3 text-xs">
         <div>
@@ -55,8 +55,13 @@ export default function DemandCard({ demand }: { demand: DemandPost }) {
       </dl>
 
       <div className="mt-4 flex items-center justify-between border-t border-field-100 pt-3">
-        <LocationBadge location={demand.location} />
-        <button type="button" className="kl-btn-secondary !px-4 !py-1.5 text-xs">
+        <LocationBadge location={demand.location} showDistance={demand.location.distanceKm > 0} />
+        <button
+          type="button"
+          disabled
+          title="Direct responses aren't wired up yet — list a matching resource instead."
+          className="kl-btn-secondary !px-4 !py-1.5 text-xs opacity-60"
+        >
           I can supply this
         </button>
       </div>
