@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { UserRole } from "@/lib/supabase/types";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface FormValues {
   name: string;
@@ -26,6 +27,7 @@ const INITIAL: FormValues = {
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [values, setValues] = useState<FormValues>(INITIAL);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,11 +42,11 @@ export default function SignupPage() {
     setError(null);
 
     if (values.password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(t("auth.passwordTooShort"));
       return;
     }
     if (!/^[6-9]\d{9}$/.test(values.phone.trim())) {
-      setError("Enter a valid 10-digit Indian mobile number.");
+      setError(t("auth.invalidPhone"));
       return;
     }
 
@@ -86,13 +88,12 @@ export default function SignupPage() {
     return (
       <div className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
         <span className="text-4xl">📩</span>
-        <h1 className="mt-4 text-2xl font-semibold">Check your email</h1>
+        <h1 className="mt-4 text-2xl font-semibold">{t("auth.checkEmail")}</h1>
         <p className="mt-2 text-field-600">
-          We&apos;ve sent a confirmation link to <strong>{values.email}</strong>. Confirm your
-          email to finish creating your AgriShare account, then log in.
+          {t("auth.checkEmailBody")} <strong>{values.email}</strong>. {t("auth.checkEmailBody2")}
         </p>
         <Link href="/login" className="kl-btn-primary mt-6">
-          Go to Login
+          {t("auth.goToLogin")}
         </Link>
       </div>
     );
@@ -100,11 +101,9 @@ export default function SignupPage() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col px-4 py-16 sm:px-6">
-      <span className="kl-section-eyebrow text-field-700">Join AgriShare</span>
-      <h1 className="mt-2 text-3xl font-semibold">Create your account</h1>
-      <p className="mt-2 text-field-600">
-        List machinery, find crop residue, and connect with farmers nearby.
-      </p>
+      <span className="kl-section-eyebrow text-field-700">{t("auth.signupEyebrow")}</span>
+      <h1 className="mt-2 text-3xl font-semibold">{t("auth.signupTitle")}</h1>
+      <p className="mt-2 text-field-600">{t("auth.signupSubtitle")}</p>
 
       <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
         {error && (
@@ -115,7 +114,7 @@ export default function SignupPage() {
 
         <div>
           <label htmlFor="name" className="kl-label">
-            Full name
+            {t("auth.fullName")}
           </label>
           <input
             id="name"
@@ -124,13 +123,13 @@ export default function SignupPage() {
             value={values.name}
             onChange={(e) => update("name", e.target.value)}
             className="kl-input"
-            placeholder="e.g. Ramesh Chaudhary"
+            placeholder={t("auth.namePlaceholder")}
           />
         </div>
 
         <div>
           <label htmlFor="email" className="kl-label">
-            Email
+            {t("auth.email")}
           </label>
           <input
             id="email"
@@ -146,7 +145,7 @@ export default function SignupPage() {
 
         <div>
           <label htmlFor="phone" className="kl-label">
-            Phone number
+            {t("auth.phone")}
           </label>
           <input
             id="phone"
@@ -156,13 +155,13 @@ export default function SignupPage() {
             value={values.phone}
             onChange={(e) => update("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
             className="kl-input"
-            placeholder="10-digit mobile number"
+            placeholder={t("auth.phonePlaceholder")}
           />
         </div>
 
         <div>
           <label htmlFor="location" className="kl-label">
-            Village / District, State
+            {t("auth.location")}
           </label>
           <input
             id="location"
@@ -171,13 +170,13 @@ export default function SignupPage() {
             value={values.location}
             onChange={(e) => update("location", e.target.value)}
             className="kl-input"
-            placeholder="e.g. Kishangarh, Ajmer, Rajasthan"
+            placeholder={t("auth.locationPlaceholder")}
           />
         </div>
 
         <div>
           <label htmlFor="role" className="kl-label">
-            I am a
+            {t("auth.iAmA")}
           </label>
           <select
             id="role"
@@ -185,14 +184,14 @@ export default function SignupPage() {
             onChange={(e) => update("role", e.target.value as UserRole)}
             className="kl-input"
           >
-            <option value="farmer">Farmer</option>
-            <option value="buyer">Buyer / Business</option>
+            <option value="farmer">{t("auth.farmer")}</option>
+            <option value="buyer">{t("auth.buyer")}</option>
           </select>
         </div>
 
         <div>
           <label htmlFor="password" className="kl-label">
-            Password
+            {t("auth.password")}
           </label>
           <input
             id="password"
@@ -203,19 +202,19 @@ export default function SignupPage() {
             value={values.password}
             onChange={(e) => update("password", e.target.value)}
             className="kl-input"
-            placeholder="At least 6 characters"
+            placeholder={t("auth.passwordPlaceholder")}
           />
         </div>
 
         <button type="submit" disabled={loading} className="kl-btn-primary w-full">
-          {loading ? "Creating account…" : "Create Account"}
+          {loading ? t("auth.creatingAccount") : t("auth.createAccount")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-field-600">
-        Already have an account?{" "}
+        {t("auth.haveAccount")}{" "}
         <Link href="/login" className="font-semibold text-field-800 hover:underline">
-          Log in
+          {t("auth.logInLink")}
         </Link>
       </p>
     </div>

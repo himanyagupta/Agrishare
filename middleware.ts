@@ -7,10 +7,21 @@ const AUTH_PATHS = ["/login", "/signup"];
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If the env vars aren't available in this runtime for any reason, don't
+  // crash the whole site over it — just let the request through unauthed.
+  // Protected pages still check auth themselves (see app/dashboard/page.tsx
+  // etc.), so this only means the redirect-before-render optimization is
+  // skipped, not that protection is gone.
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Middleware: missing Supabase env vars, skipping auth check.");
+    return response;
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;
@@ -26,29 +37,34 @@ export async function middleware(request: NextRequest) {
           response.cookies.set({ name, value: "", ...options });
         },
       },
+    });
+
+    // Refreshes the session if the access token has expired.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const path = request.nextUrl.pathname;
+    const isProtected = PROTECTED_PATHS.some((p) => path.startsWith(p));
+    const isAuthPage = AUTH_PATHS.some((p) => path.startsWith(p));
+
+    if (isProtected && !user) {
+      const redirectUrl = new URL("/login", request.url);
+      redirectUrl.searchParams.set("next", path);
+      return NextResponse.redirect(redirectUrl);
     }
-  );
 
-  // Refreshes the session if the access token has expired.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    if (isAuthPage && user) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
 
-  const path = request.nextUrl.pathname;
-  const isProtected = PROTECTED_PATHS.some((p) => path.startsWith(p));
-  const isAuthPage = AUTH_PATHS.some((p) => path.startsWith(p));
-
-  if (isProtected && !user) {
-    const redirectUrl = new URL("/login", request.url);
-    redirectUrl.searchParams.set("next", path);
-    return NextResponse.redirect(redirectUrl);
+    return response;
+  } catch (err) {
+    // Same reasoning as above: never let an unexpected Supabase/network
+    // error in middleware take the whole site down.
+    console.error("Middleware error, passing request through:", err);
+    return response;
   }
-
-  if (isAuthPage && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  return response;
 }
 
 export const config = {

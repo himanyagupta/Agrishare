@@ -7,8 +7,10 @@ import { dbResourceToUI } from "@/lib/supabase/adapters";
 import { Resource } from "@/lib/types";
 import FilterBar, { DEFAULT_FILTERS, FilterState } from "@/components/FilterBar";
 import ResourceCard from "@/components/ResourceCard";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function FindResourcesPage() {
+  const { t } = useLanguage();
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,12 +93,9 @@ export default function FindResourcesPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <span className="kl-section-eyebrow text-field-700">Browse listings</span>
-      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Find Resources</h1>
-      <p className="mt-2 max-w-2xl text-field-600">
-        Machinery and crop residue currently listed on AgriShare. Filter by category, distance,
-        or availability to find the closest fit.
-      </p>
+      <span className="kl-section-eyebrow text-field-700">{t("findResources.eyebrow")}</span>
+      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{t("findResources.title")}</h1>
+      <p className="mt-2 max-w-2xl text-field-600">{t("findResources.subtitle")}</p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[300px_1fr]">
         <div className="lg:sticky lg:top-24 lg:self-start">
@@ -106,7 +105,7 @@ export default function FindResourcesPage() {
         <div>
           {error && (
             <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              Couldn&apos;t load resources: {error}
+              {t("common.couldntLoad")}: {error}
             </div>
           )}
 
@@ -119,7 +118,8 @@ export default function FindResourcesPage() {
           ) : (
             <>
               <p className="mb-4 text-sm text-field-500">
-                {filtered.length} resource{filtered.length !== 1 ? "s" : ""} found
+                {filtered.length}{" "}
+                {filtered.length !== 1 ? t("findResources.resourcesFound") : t("findResources.resourceFound")}
               </p>
 
               {filtered.length === 0 ? (
@@ -127,20 +127,20 @@ export default function FindResourcesPage() {
                   <span className="text-3xl">🔍</span>
                   <p className="font-display text-lg font-semibold text-field-900">
                     {resources.length === 0
-                      ? "No resources listed yet"
-                      : "No resources match those filters"}
+                      ? t("findResources.noneListedTitle")
+                      : t("findResources.noneFoundTitle")}
                   </p>
                   <p className="max-w-sm text-sm text-field-500">
                     {resources.length === 0
-                      ? "Be the first to list machinery or crop residue on AgriShare."
-                      : "Try widening the distance range, clearing the search term, or switching category."}
+                      ? t("findResources.noneListedBody")
+                      : t("findResources.noneFoundBody")}
                   </p>
                   <button
                     type="button"
                     onClick={() => setFilters(DEFAULT_FILTERS)}
                     className="kl-btn-secondary mt-3"
                   >
-                    Reset filters
+                    {t("findResources.resetFilters")}
                   </button>
                 </div>
               ) : (

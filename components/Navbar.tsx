@@ -6,18 +6,12 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
-
-const LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/find-resources", label: "Find Resources" },
-  { href: "/list-resource", label: "List a Resource" },
-  { href: "/smart-match", label: "Smart Match" },
-  { href: "/community-demand", label: "Community Demand" },
-];
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 function AuthArea({ onNavigate }: { onNavigate?: () => void }) {
   const { user, profile, loading } = useUser();
   const router = useRouter();
+  const { t } = useLanguage();
 
   async function handleLogout() {
     const supabase = createClient();
@@ -35,10 +29,10 @@ function AuthArea({ onNavigate }: { onNavigate?: () => void }) {
     return (
       <div className="flex items-center gap-2">
         <Link href="/login" onClick={onNavigate} className="kl-btn-secondary">
-          Log In
+          {t("nav.logIn")}
         </Link>
         <Link href="/signup" onClick={onNavigate} className="kl-btn-accent">
-          Sign Up
+          {t("nav.signUp")}
         </Link>
       </div>
     );
@@ -54,10 +48,41 @@ function AuthArea({ onNavigate }: { onNavigate?: () => void }) {
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-field-100 text-xs font-semibold text-field-700">
           {(profile?.name ?? user.email ?? "?").charAt(0).toUpperCase()}
         </span>
-        {profile?.name ?? "My Profile"}
+        {profile?.name ?? t("nav.myProfile")}
       </Link>
       <button type="button" onClick={handleLogout} className="kl-btn-secondary">
-        Log Out
+        {t("nav.logOut")}
+      </button>
+    </div>
+  );
+}
+
+function LanguageToggle() {
+  const { lang, setLang } = useLanguage();
+
+  return (
+    <div className="flex rounded-full border border-field-200 bg-white p-0.5 text-xs font-semibold">
+      <button
+        type="button"
+        onClick={() => setLang("en")}
+        className={cn(
+          "rounded-full px-2.5 py-1 transition-colors",
+          lang === "en" ? "bg-field-700 text-white" : "text-field-600 hover:bg-field-50"
+        )}
+        aria-pressed={lang === "en"}
+      >
+        EN
+      </button>
+      <button
+        type="button"
+        onClick={() => setLang("hi")}
+        className={cn(
+          "rounded-full px-2.5 py-1 transition-colors",
+          lang === "hi" ? "bg-field-700 text-white" : "text-field-600 hover:bg-field-50"
+        )}
+        aria-pressed={lang === "hi"}
+      >
+        हिं
       </button>
     </div>
   );
@@ -66,6 +91,16 @@ function AuthArea({ onNavigate }: { onNavigate?: () => void }) {
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
+
+  const LINKS = [
+    { href: "/dashboard", label: t("nav.dashboard") },
+    { href: "/find-resources", label: t("nav.findResources") },
+    { href: "/list-resource", label: t("nav.listResource") },
+    { href: "/smart-match", label: t("nav.smartMatch") },
+    { href: "/community-demand", label: t("nav.communityDemand") },
+    { href: "/knowledge-hub", label: t("nav.knowledgeHub") },
+  ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-field-100 bg-paper/90 backdrop-blur">
@@ -101,29 +136,33 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <LanguageToggle />
           <Link href="/list-resource" className="kl-btn-accent">
-            + List a Resource
+            {t("nav.addListing")}
           </Link>
           <AuthArea />
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-field-200 text-field-700 lg:hidden"
-          aria-label="Toggle navigation menu"
-          aria-expanded={open}
-        >
-          {open ? (
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <LanguageToggle />
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-field-200 text-field-700"
+            aria-label="Toggle navigation menu"
+            aria-expanded={open}
+          >
+            {open ? (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+        </div>
       </nav>
 
       {open && (
@@ -150,7 +189,7 @@ export default function Navbar() {
               onClick={() => setOpen(false)}
               className="kl-btn-accent mt-2"
             >
-              + List a Resource
+              {t("nav.addListing")}
             </Link>
             <div className="mt-2">
               <AuthArea onNavigate={() => setOpen(false)} />

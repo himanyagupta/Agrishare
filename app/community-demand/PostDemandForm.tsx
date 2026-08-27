@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ResourceCategory } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const MACHINERY_TYPES = [
   "Tractor",
@@ -35,6 +36,7 @@ export default function PostDemandForm({
   onPosted: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useLanguage();
   const [category, setCategory] = useState<ResourceCategory>("machinery");
   const [resourceType, setResourceType] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -52,9 +54,9 @@ export default function PostDemandForm({
     setSubmitError(null);
 
     const nextErrors: Record<string, string> = {};
-    if (!resourceType) nextErrors.resourceType = "Select what you need.";
-    if (!quantity.trim()) nextErrors.quantity = "Enter the quantity needed.";
-    if (!location.trim()) nextErrors.location = "Enter a location.";
+    if (!resourceType) nextErrors.resourceType = t("communityDemand.selectWhatYouNeed");
+    if (!quantity.trim()) nextErrors.quantity = t("communityDemand.enterQuantity");
+    if (!location.trim()) nextErrors.location = t("communityDemand.enterLocation");
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -102,14 +104,14 @@ export default function PostDemandForm({
                 : "border-field-200 text-field-700 hover:bg-field-50"
             }`}
           >
-            {cat === "machinery" ? "🚜 Machinery" : "🌾 Residue"}
+            {cat === "machinery" ? `🚜 ${t("findResources.machinery")}` : `🌾 ${t("findResources.residue")}`}
           </button>
         ))}
       </div>
 
       <div>
         <label htmlFor="resourceType" className="kl-label">
-          What do you need?
+          {t("communityDemand.whatDoYouNeed")}
         </label>
         <select
           id="resourceType"
@@ -117,10 +119,10 @@ export default function PostDemandForm({
           onChange={(e) => setResourceType(e.target.value)}
           className="kl-input"
         >
-          <option value="">Select type</option>
-          {typeOptions.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          <option value="">{t("communityDemand.selectType")}</option>
+          {typeOptions.map((typeOption) => (
+            <option key={typeOption} value={typeOption}>
+              {typeOption}
             </option>
           ))}
         </select>
@@ -130,28 +132,28 @@ export default function PostDemandForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="quantity" className="kl-label">
-            Quantity needed
+            {t("communityDemand.quantityNeeded")}
           </label>
           <input
             id="quantity"
             type="text"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            placeholder="e.g. 8 acres, 100 quintals"
+            placeholder={t("communityDemand.quantityNeededPlaceholder")}
             className="kl-input"
           />
           {errors.quantity && <p className="mt-1 text-xs text-red-600">{errors.quantity}</p>}
         </div>
         <div>
           <label htmlFor="budget" className="kl-label">
-            Budget (optional)
+            {t("communityDemand.budgetOptional")}
           </label>
           <input
             id="budget"
             type="text"
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
-            placeholder="e.g. ₹2,000–2,500 / acre"
+            placeholder={t("communityDemand.budgetPlaceholder")}
             className="kl-input"
           />
         </div>
@@ -160,7 +162,7 @@ export default function PostDemandForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="requiredDate" className="kl-label">
-            Needed by (optional)
+            {t("communityDemand.neededByOptional")}
           </label>
           <input
             id="requiredDate"
@@ -172,14 +174,14 @@ export default function PostDemandForm({
         </div>
         <div>
           <label htmlFor="location" className="kl-label">
-            Location
+            {t("communityDemand.locationLabel")}
           </label>
           <input
             id="location"
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Village, District, State"
+            placeholder={t("communityDemand.locationPlaceholder")}
             className="kl-input"
           />
           {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location}</p>}
@@ -188,10 +190,10 @@ export default function PostDemandForm({
 
       <div className="flex gap-3 pt-2">
         <button type="submit" disabled={submitting} className="kl-btn-primary">
-          {submitting ? "Posting…" : "Post Demand"}
+          {submitting ? t("communityDemand.posting") : t("communityDemand.postButton")}
         </button>
         <button type="button" onClick={onCancel} className="kl-btn-secondary">
-          Cancel
+          {t("communityDemand.cancel")}
         </button>
       </div>
     </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ResourceCategory } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export interface FilterState {
   search: string;
@@ -29,6 +30,8 @@ export default function FilterBar({
   onChange: (next: FilterState) => void;
   typeOptions: string[];
 }) {
+  const { t } = useLanguage();
+
   function set<K extends keyof FilterState>(key: K, value: FilterState[K]) {
     onChange({ ...filters, [key]: value });
   }
@@ -37,14 +40,14 @@ export default function FilterBar({
     <div className="kl-card space-y-4 p-4 sm:p-5">
       <div>
         <label htmlFor="search" className="kl-label">
-          Search
+          {t("findResources.search")}
         </label>
         <input
           id="search"
           type="text"
           value={filters.search}
           onChange={(e) => set("search", e.target.value)}
-          placeholder="Try 'tractor', 'wheat straw', 'Pushkar'..."
+          placeholder={t("findResources.searchPlaceholder")}
           className="kl-input"
         />
       </div>
@@ -52,7 +55,7 @@ export default function FilterBar({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
           <label htmlFor="category" className="kl-label">
-            Category
+            {t("findResources.category")}
           </label>
           <select
             id="category"
@@ -60,15 +63,15 @@ export default function FilterBar({
             onChange={(e) => set("category", e.target.value as FilterState["category"])}
             className="kl-input"
           >
-            <option value="all">All categories</option>
-            <option value="machinery">Machinery</option>
-            <option value="residue">Crop Residue</option>
+            <option value="all">{t("findResources.allCategories")}</option>
+            <option value="machinery">{t("findResources.machinery")}</option>
+            <option value="residue">{t("findResources.residue")}</option>
           </select>
         </div>
 
         <div>
           <label htmlFor="type" className="kl-label">
-            Type
+            {t("findResources.type")}
           </label>
           <select
             id="type"
@@ -76,10 +79,10 @@ export default function FilterBar({
             onChange={(e) => set("type", e.target.value)}
             className="kl-input"
           >
-            <option value="all">All types</option>
-            {typeOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="all">{t("findResources.allTypes")}</option>
+            {typeOptions.map((typeOption) => (
+              <option key={typeOption} value={typeOption}>
+                {typeOption}
               </option>
             ))}
           </select>
@@ -87,7 +90,7 @@ export default function FilterBar({
 
         <div>
           <label htmlFor="distance" className="kl-label">
-            Within {filters.maxDistance} km
+            {t("findResources.within")} {filters.maxDistance} {t("findResources.km")}
           </label>
           <input
             id="distance"
@@ -102,7 +105,7 @@ export default function FilterBar({
 
         <div>
           <label htmlFor="sort" className="kl-label">
-            Sort by
+            {t("findResources.sortBy")}
           </label>
           <select
             id="sort"
@@ -110,10 +113,10 @@ export default function FilterBar({
             onChange={(e) => set("sortBy", e.target.value as FilterState["sortBy"])}
             className="kl-input"
           >
-            <option value="distance">Nearest first</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="newest">Newest listed</option>
+            <option value="distance">{t("findResources.sortNearest")}</option>
+            <option value="price-low">{t("findResources.sortPriceLow")}</option>
+            <option value="price-high">{t("findResources.sortPriceHigh")}</option>
+            <option value="newest">{t("findResources.sortNewest")}</option>
           </select>
         </div>
       </div>
@@ -125,7 +128,7 @@ export default function FilterBar({
           onChange={(e) => set("availabilityOnly", e.target.checked)}
           className="h-4 w-4 rounded border-field-300 text-field-700 focus:ring-field-400"
         />
-        Show only what&apos;s available right now
+        {t("findResources.availableOnly")}
       </label>
     </div>
   );

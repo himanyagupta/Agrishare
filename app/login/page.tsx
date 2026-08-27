@@ -4,11 +4,13 @@ import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,11 +38,9 @@ function LoginForm() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16 sm:px-6">
-      <span className="kl-section-eyebrow text-field-700">Welcome back</span>
-      <h1 className="mt-2 text-3xl font-semibold">Log in to AgriShare</h1>
-      <p className="mt-2 text-field-600">
-        Access your dashboard, listings and community requests.
-      </p>
+      <span className="kl-section-eyebrow text-field-700">{t("auth.welcomeBack")}</span>
+      <h1 className="mt-2 text-3xl font-semibold">{t("auth.loginTitle")}</h1>
+      <p className="mt-2 text-field-600">{t("auth.loginSubtitle")}</p>
 
       <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
         {error && (
@@ -51,7 +51,7 @@ function LoginForm() {
 
         <div>
           <label htmlFor="email" className="kl-label">
-            Email
+            {t("auth.email")}
           </label>
           <input
             id="email"
@@ -67,7 +67,7 @@ function LoginForm() {
 
         <div>
           <label htmlFor="password" className="kl-label">
-            Password
+            {t("auth.password")}
           </label>
           <input
             id="password"
@@ -82,14 +82,14 @@ function LoginForm() {
         </div>
 
         <button type="submit" disabled={loading} className="kl-btn-primary w-full">
-          {loading ? "Logging in…" : "Log In"}
+          {loading ? t("auth.loggingIn") : t("auth.logIn")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-field-600">
-        Don&apos;t have an account?{" "}
+        {t("auth.noAccount")}{" "}
         <Link href="/signup" className="font-semibold text-field-800 hover:underline">
-          Sign up
+          {t("auth.signUpLink")}
         </Link>
       </p>
     </div>

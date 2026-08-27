@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ResourceCategory } from "@/lib/types";
 import { Database } from "@/lib/supabase/types";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const MACHINERY_TYPES = [
   "Tractor",
@@ -84,6 +85,7 @@ export default function ResourceForm({
   existing?: ResourceRow;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [values, setValues] = useState<FormValues>(existing ? rowToValues(existing) : INITIAL_VALUES);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -100,14 +102,16 @@ export default function ResourceForm({
 
   function validate(v: FormValues): FormErrors {
     const next: FormErrors = {};
-    if (!v.type) next.type = "Select a resource type.";
-    if (v.title.trim().length < 5) next.title = "Title should be at least 5 characters.";
-    if (v.description.trim().length < 20) next.description = "Add a bit more detail (20+ characters).";
-    if (!v.location.trim()) next.location = "Enter a location, e.g. Village, District, State.";
-    if (!v.price || Number(v.price) <= 0) next.price = "Enter a valid price greater than 0.";
+    if (!v.type) next.type = t("listResource.errors.selectType");
+    if (v.title.trim().length < 5) next.title = t("listResource.errors.titleShort");
+    if (v.description.trim().length < 20) next.description = t("listResource.errors.descShort");
+    if (!v.location.trim()) next.location = t("listResource.errors.locationRequired");
+    if (!v.price || Number(v.price) <= 0) next.price = t("listResource.errors.priceInvalid");
     if (!v.quantityOrCondition.trim())
       next.quantityOrCondition =
-        v.category === "machinery" ? "Describe the condition." : "Enter quantity available.";
+        v.category === "machinery"
+          ? t("listResource.errors.conditionRequired")
+          : t("listResource.errors.quantityRequired");
     return next;
   }
 
@@ -168,19 +172,17 @@ export default function ResourceForm({
       <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
         <span className="text-4xl">✅</span>
         <h1 className="mt-4 text-3xl font-semibold">
-          {mode === "create" ? "Listing published" : "Listing updated"}
+          {mode === "create" ? t("listResource.listingPublished") : t("listResource.listingUpdated")}
         </h1>
         <p className="mt-3 text-field-600">
-          {mode === "create"
-            ? "Your resource is now live and searchable on AgriShare."
-            : "Your changes have been saved."}
+          {mode === "create" ? t("listResource.nowLive") : t("listResource.changesSaved")}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link href={`/resource/${savedId}`} className="kl-btn-primary">
-            View Listing
+            {t("listResource.viewListing")}
           </Link>
           <Link href="/dashboard" className="kl-btn-secondary">
-            Go to Dashboard
+            {t("listResource.goToDashboard")}
           </Link>
         </div>
       </div>
@@ -189,15 +191,9 @@ export default function ResourceForm({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <span className="kl-section-eyebrow text-field-700">
-        {mode === "create" ? "Add a listing" : "Edit listing"}
-      </span>
-      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
-        {mode === "create" ? "List a Resource" : "Edit Resource"}
-      </h1>
-      <p className="mt-2 text-field-600">
-        Share idle machinery or surplus crop residue so nearby farmers can find and use it.
-      </p>
+      <span className="kl-section-eyebrow text-field-700">{t("listResource.eyebrow")}</span>
+      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{t("listResource.title")}</h1>
+      <p className="mt-2 text-field-600">{t("listResource.subtitle")}</p>
 
       <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-8">
         {submitError && (
@@ -207,7 +203,7 @@ export default function ResourceForm({
         )}
 
         <fieldset>
-          <legend className="kl-label">What are you listing?</legend>
+          <legend className="kl-label">{t("listResource.whatListing")}</legend>
           <div className="grid grid-cols-2 gap-3">
             {(["machinery", "residue"] as ResourceCategory[]).map((cat) => (
               <button
@@ -223,10 +219,10 @@ export default function ResourceForm({
                 </span>
                 <div>
                   <p className="font-semibold text-field-900">
-                    {cat === "machinery" ? "Machinery" : "Crop Residue"}
+                    {cat === "machinery" ? t("findResources.machinery") : t("findResources.residue")}
                   </p>
                   <p className="text-xs text-field-500">
-                    {cat === "machinery" ? "Tractors, harvesters, tools..." : "Straw, stalks, husk..."}
+                    {cat === "machinery" ? t("listResource.machineryDesc") : t("listResource.residueDesc")}
                   </p>
                 </div>
               </button>
@@ -236,7 +232,7 @@ export default function ResourceForm({
 
         <div>
           <label htmlFor="type" className="kl-label">
-            Resource type
+            {t("listResource.resourceType")}
           </label>
           <select
             id="type"
@@ -245,10 +241,10 @@ export default function ResourceForm({
             className="kl-input"
             data-error={Boolean(errors.type)}
           >
-            <option value="">Select type</option>
-            {typeOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="">{t("listResource.selectType")}</option>
+            {typeOptions.map((typeOption) => (
+              <option key={typeOption} value={typeOption}>
+                {typeOption}
               </option>
             ))}
           </select>
@@ -257,14 +253,14 @@ export default function ResourceForm({
 
         <div>
           <label htmlFor="title" className="kl-label">
-            Listing title
+            {t("listResource.listingTitle")}
           </label>
           <input
             id="title"
             type="text"
             value={values.title}
             onChange={(e) => update("title", e.target.value)}
-            placeholder="e.g. Mahindra 47 HP Tractor with Trolley"
+            placeholder={t("listResource.titlePlaceholder")}
             className="kl-input"
             data-error={Boolean(errors.title)}
           />
@@ -273,14 +269,14 @@ export default function ResourceForm({
 
         <div>
           <label htmlFor="description" className="kl-label">
-            Description
+            {t("listResource.description")}
           </label>
           <textarea
             id="description"
             rows={4}
             value={values.description}
             onChange={(e) => update("description", e.target.value)}
-            placeholder="Describe the resource, its use, and any conditions for hiring or collection."
+            placeholder={t("listResource.descPlaceholder")}
             className="kl-input"
             data-error={Boolean(errors.description)}
           />
@@ -289,14 +285,14 @@ export default function ResourceForm({
 
         <div>
           <label htmlFor="location" className="kl-label">
-            Location
+            {t("listResource.location")}
           </label>
           <input
             id="location"
             type="text"
             value={values.location}
             onChange={(e) => update("location", e.target.value)}
-            placeholder="Village, District, State"
+            placeholder={t("listResource.locationPlaceholder")}
             className="kl-input"
             data-error={Boolean(errors.location)}
           />
@@ -306,7 +302,7 @@ export default function ResourceForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="price" className="kl-label">
-              Price (₹)
+              {t("listResource.price")}
             </label>
             <input
               id="price"
@@ -314,7 +310,7 @@ export default function ResourceForm({
               min={0}
               value={values.price}
               onChange={(e) => update("price", e.target.value)}
-              placeholder="e.g. 650"
+              placeholder={t("listResource.titlePricePlaceholder")}
               className="kl-input"
               data-error={Boolean(errors.price)}
             />
@@ -322,7 +318,7 @@ export default function ResourceForm({
           </div>
           <div>
             <label htmlFor="priceUnit" className="kl-label">
-              Price unit
+              {t("listResource.priceUnit")}
             </label>
             <select
               id="priceUnit"
@@ -330,9 +326,9 @@ export default function ResourceForm({
               onChange={(e) => update("priceUnit", e.target.value)}
               className="kl-input"
             >
-              {unitOptions.map((u) => (
-                <option key={u} value={u}>
-                  {u}
+              {unitOptions.map((unitOption) => (
+                <option key={unitOption} value={unitOption}>
+                  {unitOption}
                 </option>
               ))}
             </select>
@@ -341,7 +337,7 @@ export default function ResourceForm({
 
         <div>
           <label htmlFor="quantityOrCondition" className="kl-label">
-            {values.category === "machinery" ? "Condition" : "Quantity available"}
+            {values.category === "machinery" ? t("listResource.condition") : t("listResource.quantity")}
           </label>
           <input
             id="quantityOrCondition"
@@ -349,7 +345,9 @@ export default function ResourceForm({
             value={values.quantityOrCondition}
             onChange={(e) => update("quantityOrCondition", e.target.value)}
             placeholder={
-              values.category === "machinery" ? "e.g. 2019 model, well maintained" : "e.g. 60 quintals"
+              values.category === "machinery"
+                ? t("listResource.conditionPlaceholder")
+                : t("listResource.quantityPlaceholder")
             }
             className="kl-input"
             data-error={Boolean(errors.quantityOrCondition)}
@@ -360,12 +358,12 @@ export default function ResourceForm({
         </div>
 
         <fieldset>
-          <legend className="kl-label">Availability</legend>
+          <legend className="kl-label">{t("listResource.availability")}</legend>
           <div className="flex flex-wrap gap-3">
             {[
-              { value: "available", label: "Available now" },
-              { value: "upcoming", label: "Available soon" },
-              { value: "booked", label: "Currently booked" },
+              { value: "available", label: t("listResource.availableNow") },
+              { value: "upcoming", label: t("listResource.availableSoon") },
+              { value: "booked", label: t("listResource.currentlyBooked") },
             ].map((opt) => (
               <label
                 key={opt.value}
@@ -389,7 +387,7 @@ export default function ResourceForm({
 
         <div>
           <label htmlFor="photos" className="kl-label">
-            Photos (optional)
+            {t("listResource.photos")}
           </label>
           <input
             id="photos"
@@ -398,14 +396,12 @@ export default function ResourceForm({
             multiple
             className="kl-input file:mr-4 file:rounded-full file:border-0 file:bg-field-100 file:px-4 file:py-1.5 file:text-sm file:font-semibold file:text-field-700"
           />
-          <p className="mt-1 text-xs text-field-500">
-            Photo upload isn&apos;t wired up yet — this field is UI-only for now.
-          </p>
+          <p className="mt-1 text-xs text-field-500">{t("listResource.photosNote")}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 border-t border-field-100 pt-6">
           <button type="submit" disabled={submitting} className="kl-btn-primary">
-            {submitting ? "Saving…" : mode === "create" ? "Publish Listing" : "Save Changes"}
+            {submitting ? t("listResource.saving") : mode === "create" ? t("listResource.publish") : t("listResource.saveChanges")}
           </button>
           {mode === "create" && (
             <button
@@ -416,7 +412,7 @@ export default function ResourceForm({
               }}
               className="kl-btn-secondary"
             >
-              Clear form
+              {t("listResource.clearForm")}
             </button>
           )}
         </div>

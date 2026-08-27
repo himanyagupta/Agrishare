@@ -10,8 +10,10 @@ import { useUser } from "@/hooks/useUser";
 import DemandCard from "@/components/DemandCard";
 import DashboardStat from "@/components/DashboardStat";
 import PostDemandForm from "./PostDemandForm";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function CommunityDemandPage() {
+  const { t } = useLanguage();
   const { user, loading: userLoading } = useUser();
   const [demandPosts, setDemandPosts] = useState<DemandPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,22 +66,19 @@ export default function CommunityDemandPage() {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <span className="kl-section-eyebrow text-field-700">What the community needs</span>
-          <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Community Demand</h1>
-          <p className="mt-2 max-w-2xl text-field-600">
-            Open requests from nearby farmers, cooperatives and small businesses. Respond if you
-            have a matching resource to offer.
-          </p>
+          <span className="kl-section-eyebrow text-field-700">{t("communityDemand.eyebrow")}</span>
+          <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{t("communityDemand.title")}</h1>
+          <p className="mt-2 max-w-2xl text-field-600">{t("communityDemand.subtitle")}</p>
         </div>
         {!showForm &&
           (user ? (
             <button type="button" onClick={() => setShowForm(true)} className="kl-btn-primary">
-              + Post a Demand
+              {t("communityDemand.postDemand")}
             </button>
           ) : (
             !userLoading && (
               <Link href="/login?next=/community-demand" className="kl-btn-primary">
-                Log in to Post a Demand
+                {t("communityDemand.loginToPost")}
               </Link>
             )
           ))}
@@ -99,9 +98,9 @@ export default function CommunityDemandPage() {
       )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <DashboardStat label="Open Requests" value={String(demandPosts.length)} icon="📋" accent="field" />
-        <DashboardStat label="Urgent Requests" value={String(urgentCount)} icon="⏱️" accent="turmeric" />
-        <DashboardStat label="Farmer Responses" value={String(totalResponders)} icon="🤝" accent="soil" />
+        <DashboardStat label={t("communityDemand.openRequests")} value={String(demandPosts.length)} icon="📋" accent="field" />
+        <DashboardStat label={t("communityDemand.urgentRequests")} value={String(urgentCount)} icon="⏱️" accent="turmeric" />
+        <DashboardStat label={t("communityDemand.farmerResponses")} value={String(totalResponders)} icon="🤝" accent="soil" />
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
@@ -115,7 +114,7 @@ export default function CommunityDemandPage() {
                 category === c ? "bg-field-700 text-white" : "text-field-600 hover:bg-field-50"
               }`}
             >
-              {c === "all" ? "All" : c === "machinery" ? "Machinery" : "Residue"}
+              {c === "all" ? t("communityDemand.all") : c === "machinery" ? t("findResources.machinery") : t("findResources.residue")}
             </button>
           ))}
         </div>
@@ -130,7 +129,13 @@ export default function CommunityDemandPage() {
                 urgency === u ? "bg-turmeric-400 text-soil-900" : "text-field-600 hover:bg-field-50"
               }`}
             >
-              {u === "all" ? "Any urgency" : u === "high" ? "Urgent" : u === "medium" ? "Moderate" : "Flexible"}
+              {u === "all"
+                ? t("communityDemand.anyUrgency")
+                : u === "high"
+                ? t("communityDemand.urgent")
+                : u === "medium"
+                ? t("communityDemand.moderate")
+                : t("communityDemand.flexible")}
             </button>
           ))}
         </div>
@@ -139,7 +144,7 @@ export default function CommunityDemandPage() {
       <div className="mt-6">
         {error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            Couldn&apos;t load community demand: {error}
+            {t("common.couldntLoadDemand")}: {error}
           </div>
         )}
 
@@ -151,9 +156,7 @@ export default function CommunityDemandPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="kl-card p-10 text-center text-field-500">
-            {demandPosts.length === 0
-              ? "No open requests yet — be the first to post one."
-              : "No requests match those filters right now."}
+            {demandPosts.length === 0 ? t("communityDemand.noneOpenYet") : t("communityDemand.noneMatchFilters")}
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
