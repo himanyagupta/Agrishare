@@ -15,7 +15,7 @@ const STORAGE_KEY = "agrishare-lang";
 
 function lookup(lang: Lang, path: string): string {
   const parts = path.split(".");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   let node: any = translations[lang];
   for (const part of parts) {
     if (node == null) break;
@@ -26,7 +26,7 @@ function lookup(lang: Lang, path: string): string {
   // Fall back to English if a key is missing in the current language,
   // rather than showing a blank or a raw key like "nav.dashboard".
   if (lang !== "en") {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     let fallback: any = translations.en;
     for (const part of parts) {
       if (fallback == null) break;
