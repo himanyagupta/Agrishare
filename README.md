@@ -37,7 +37,7 @@ Farm machinery in rural India sits idle most of the year, while crop residue oft
 - **Resilient middleware design:** auth middleware fails safe (never crashes the app) if environment/network issues occur, with protected pages independently re-verifying authentication as a backup layer
 - **Clean data adapter pattern:** a dedicated adapter layer maps raw Supabase rows into UI-ready types, keeping component code fully decoupled from database schema changes
 
-## What I'd Build Next
+## What I'd Build Next(future enhancements)
 
 - Real-time interactive maps (Leaflet/OpenStreetMap) with geocoding for true proximity search
 - A booking/response system connecting Community Demand posts to confirmed transactions
