@@ -1,6 +1,6 @@
 # AgriShare 🌾
 
-**A full-stack rural resource-exchange marketplace connecting farmers with underused agricultural machinery and crop residue — built for Smart India Hackathon.**
+**A full-stack rural resource-exchange marketplace connecting farmers with underused agricultural machinery and crop residue**
 
 🔗 **Live demo:** [agrisharep2p.vercel.app](https://agrisharep2p.vercel.app)
 📦 **Repo:** [github.com/himanyagupta/Agrishare](https://github.com/himanyagupta/Agrishare)
