@@ -7,7 +7,7 @@
 
 ---
 
-## The Problem
+## The Problem :)
 
 Farm machinery in rural India sits idle most of the year, while crop residue often gets burned simply because there's no easy way to find someone nearby who needs it. AgriShare solves this discovery problem with a two-sided marketplace matched by **location, availability, cost, and demand**.
 
